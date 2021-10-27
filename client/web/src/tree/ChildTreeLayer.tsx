@@ -5,6 +5,7 @@ import { FileDecorationsByPath } from '@sourcegraph/shared/src/api/extension/ext
 import { SingleChildTreeLayer } from './SingleChildTreeLayer'
 import { TreeLayer } from './TreeLayer'
 import { TreeRootProps } from './TreeRoot'
+import { TreeLayerTable } from './ui'
 import { hasSingleChild, SingleChildGitTree, TreeEntryInfo } from './util'
 
 interface ChildTreeLayerProps extends Pick<TreeRootProps, Exclude<keyof TreeRootProps, 'sizeKey'>> {
@@ -44,7 +45,7 @@ export const ChildTreeLayer: React.FunctionComponent<ChildTreeLayerProps> = (pro
 
     return (
         <div>
-            <table className="tree-layer">
+            <TreeLayerTable>
                 <tbody>
                     <tr>
                         <td>
@@ -76,7 +77,7 @@ export const ChildTreeLayer: React.FunctionComponent<ChildTreeLayerProps> = (pro
                         </td>
                     </tr>
                 </tbody>
-            </table>
+            </TreeLayerTable>
         </div>
     )
 }
