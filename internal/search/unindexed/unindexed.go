@@ -21,6 +21,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/mutablelimiter"
 	"github.com/sourcegraph/sourcegraph/internal/search"
+	"github.com/sourcegraph/sourcegraph/internal/search/query"
 	"github.com/sourcegraph/sourcegraph/internal/search/repos"
 	"github.com/sourcegraph/sourcegraph/internal/search/result"
 	"github.com/sourcegraph/sourcegraph/internal/search/searcher"
@@ -300,4 +301,31 @@ func callSearcherOverRepos(
 	})
 
 	return g.Wait()
+}
+
+type TextSearch struct {
+	ZoektArgs         *search.ZoektParameters
+	SearcherArgs      *search.SearcherParameters
+	NotSearcherOnly   bool
+	UseIndex          query.YesNoOnly
+	ContainsRefGlobs  bool
+	OnMissingRepoRevs zoektutil.OnMissingRepoRevs
+}
+
+func (t *TextSearch) Run(ctx context.Context, stream streaming.Sender, repos []*search.RepositoryRevisions) error {
+	request, ok, err := zoektutil.OnlyUnindexed(repos, t.ZoektArgs.Zoekt, t.UseIndex, t.ContainsRefGlobs, t.OnMissingRepoRevs)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		request, err = zoektutil.NewIndexedSubsetSearchRequest(ctx, repos, t.UseIndex, t.ZoektArgs, t.OnMissingRepoRevs)
+		if err != nil {
+			return err
+		}
+	}
+	return SearchFilesInRepos(ctx, request, t.SearcherArgs, t.NotSearcherOnly, stream)
+}
+
+func (*TextSearch) Name() string {
+	return "Text"
 }
